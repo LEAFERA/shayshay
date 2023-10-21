@@ -37,25 +37,29 @@ async def on_message(message):
     try:
         if message.author == client.user:
             return
-
+            
+        if "בוקר טוב" in message.content:
+            await message.add_reaction("☀️")
+            await message.add_reaction("❤️")
+            
         if message.content.startswith(pre):
             text = message.content[len(pre):].strip()
+            
+        if message.guild is not None:
+            logging_data = (str(message.id), message.guild.name, message.channel.name, message.author.name, text)
+            identifier = message.guild.id
+        else:
+            identifier = message.author.id
+            logging_data = (str(message.id), message.author.name, text)
+        logger.info("<->".join(logging_data))
 
-            if message.guild is not None:
-                logging_data = (str(message.id), message.guild.name, message.channel.name, message.author.name, text)
-                identifier = message.guild.id
-            else:
-                identifier = message.author.id
-                logging_data = (str(message.id), message.author.name, text)
-            logger.info("<->".join(logging_data))
+        response, file = command_interpreter.choose_command(message, text, identifier)
 
-            response, file = command_interpreter.choose_command(message, text, identifier)
+        logging_data = (str(message.id), response)
+        logger.info("<->".join(logging_data))
 
-            logging_data = (str(message.id), response)
-            logger.info("<->".join(logging_data))
-
-            if response != "":
-                await message.channel.send(response, file=file)
+        if response != "":
+            await message.channel.send(response, file=file)
 
     except Exception as e:
         logger.error(e)
